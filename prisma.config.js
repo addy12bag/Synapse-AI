@@ -1,6 +1,5 @@
-import { defineConfig } from "prisma/config";
-
-export default defineConfig({
+/** @type {import('prisma/config').Config} */
+export default {
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
@@ -8,4 +7,4 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"],
   },
-});
+};
