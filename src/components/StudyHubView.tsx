@@ -17,7 +17,6 @@ import {
   File,
   Loader2,
   GraduationCap,
-  Clock,
   Trophy,
   RotateCcw,
   Check,
@@ -46,7 +45,7 @@ import {
   getSpacedRepetitionData,
   reviewSpacedCard,
 } from "@/app/actions";
-import { Syllabus, Subject, Quiz, Question, QuizAttempt, SyllabusChunk } from "@prisma/client";
+import { Syllabus, Subject, Quiz, Question, QuizAttempt, SyllabusChunk, SpacedRepetitionCard } from "@prisma/client";
 
 type SyllabusWithRelations = Syllabus & {
   subject: Subject | null;
@@ -56,6 +55,25 @@ type SyllabusWithRelations = Syllabus & {
     attempts: QuizAttempt[];
   })[];
 };
+
+export type SpacedCardWithRelations = SpacedRepetitionCard & {
+  question: Question & {
+    quiz: (Quiz & {
+      syllabus: Syllabus | null;
+    }) | null;
+  };
+};
+
+export type WeaknessStats = {
+  syllabusId: string;
+  name: string;
+  subjectColor: string;
+  avgScore: number;
+  totalAttempts: number;
+  totalQuestions: number;
+  wrongAnswersCount: number;
+};
+
 
 interface StudyHubViewProps {
   initialSyllabi: SyllabusWithRelations[];
@@ -69,9 +87,9 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
 
   // ─── SPACED REPETITION & WEAKNESS STATE ──────────────────────────────────
   const [spacedData, setSpacedData] = useState<{
-    dueCards: any[];
+    dueCards: SpacedCardWithRelations[];
     totalCardsCount: number;
-    weaknesses: any[];
+    weaknesses: WeaknessStats[];
     agentLog: string;
   } | null>(null);
   const [isSpacedLoading, setIsSpacedLoading] = useState(false);
@@ -83,7 +101,12 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
     setIsSpacedLoading(true);
     try {
       const data = await getSpacedRepetitionData();
-      setSpacedData(data);
+      setSpacedData(data as unknown as {
+        dueCards: SpacedCardWithRelations[];
+        totalCardsCount: number;
+        weaknesses: WeaknessStats[];
+        agentLog: string;
+      });
     } catch (err) {
       console.error("Failed to fetch spaced repetition data:", err);
     } finally {
@@ -92,7 +115,10 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
   };
 
   useEffect(() => {
-    fetchSpacedData();
+    const timer = setTimeout(() => {
+      fetchSpacedData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleReviewCard = async (cardId: string, isCorrect: boolean) => {
@@ -106,10 +132,15 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
           
           // Re-fetch data to update the due list
           const data = await getSpacedRepetitionData();
-          setSpacedData(data);
+          setSpacedData(data as unknown as {
+            dueCards: SpacedCardWithRelations[];
+            totalCardsCount: number;
+            weaknesses: WeaknessStats[];
+            agentLog: string;
+          });
           
-          if (data && activeCardIndex >= data.dueCards.length) {
-            setActiveCardIndex(Math.max(0, data.dueCards.length - 1));
+          if (data && activeCardIndex >= (data as unknown as { dueCards: SpacedCardWithRelations[] }).dueCards.length) {
+            setActiveCardIndex(Math.max(0, (data as unknown as { dueCards: SpacedCardWithRelations[] }).dueCards.length - 1));
           }
         }
       } catch (err) {
@@ -1077,10 +1108,10 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
                               >
                                 <div className="flex items-center justify-between">
                                   <Badge className="bg-primary/20 border border-primary/30 text-primary text-[9px] uppercase tracking-wider">Question</Badge>
-                                  <span className="text-[9px] text-muted-foreground truncate max-w-[150px]">{card.fileName}</span>
+                                  <span className="text-[9px] text-muted-foreground truncate max-w-[150px]">{card.question.quiz?.syllabus?.fileName || "General"}</span>
                                 </div>
                                 <div className="text-sm font-semibold text-white text-center flex items-center justify-center flex-1 my-4 leading-relaxed overflow-y-auto max-h-[120px]">
-                                  {card.text}
+                                  {card.question.text}
                                 </div>
                                 <div className="text-[9px] text-center text-slate-400 animate-pulse">Click card to reveal answer</div>
                               </div>
@@ -1092,14 +1123,14 @@ export function StudyHubView({ initialSyllabi, subjects }: StudyHubViewProps) {
                               >
                                 <div className="flex items-center justify-between">
                                   <Badge className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[9px] uppercase tracking-wider">Correct Answer</Badge>
-                                  <span className="text-[9px] text-muted-foreground truncate max-w-[150px]">{card.quizTitle}</span>
+                                  <span className="text-[9px] text-muted-foreground truncate max-w-[150px]">{card.question.quiz?.title || "Syllabus Quiz"}</span>
                                 </div>
                                 <div className="text-sm font-bold text-white text-center flex items-center justify-center flex-1 my-2 overflow-y-auto max-h-[100px]">
-                                  {card.answer}
+                                  {card.question.answer}
                                 </div>
-                                {card.explanation && (
+                                {card.question.explanation && (
                                   <div className="text-[9px] text-muted-foreground/90 border-t border-white/5 pt-1.5 text-center overflow-y-auto max-h-[50px] leading-relaxed">
-                                    <span className="font-bold text-slate-200">Explanation:</span> {card.explanation}
+                                    <span className="font-bold text-slate-200">Explanation:</span> {card.question.explanation}
                                   </div>
                                 )}
                                 <div className="text-[9px] text-center text-emerald-400 font-semibold">Click to flip back</div>

@@ -1,5 +1,5 @@
 /** @type {import('prisma/config').Config} */
-export default {
+const config = {
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
@@ -8,3 +8,6 @@ export default {
     url: process.env["DATABASE_URL"],
   },
 };
+
+export default config;
+
