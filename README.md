@@ -9,8 +9,11 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=for-the-badge&logo=postgresql)](https://postgresql.org)
 [![Clerk](https://img.shields.io/badge/Clerk-Auth-7C3AED?style=for-the-badge&logo=clerk)](https://clerk.com)
 [![Gemini](https://img.shields.io/badge/Google-Gemini_AI-4285F4?style=for-the-badge&logo=google)](https://ai.google.dev)
+[![ADK](https://img.shields.io/badge/Google-ADK_Agents-FF6F00?style=for-the-badge&logo=google)](https://google.github.io/adk-docs/)
+[![MCP](https://img.shields.io/badge/MCP-Server-8B5CF6?style=for-the-badge)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Deploy on Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render)](https://render.com)
+[![Kaggle Capstone](https://img.shields.io/badge/Kaggle-Capstone_2026-20BEFF?style=for-the-badge&logo=kaggle)](https://kaggle.com)
 
 <br/>
 
@@ -24,8 +27,26 @@
 
 ---
 
+## 🏆 Kaggle Capstone — 5-Day AI Agents with Google
+
+> **Track: Agents for Good (Education)**  
+> Synapse AI demonstrates **5 core ADK concepts**: multi-agent systems, MCP servers, agent skills, subagent orchestration, and autonomous behavior.
+
+| ADK Concept | Implementation |
+|---|---|
+| **Multi-Agent System** | Orchestrator delegates to 3 specialized sub-agents |
+| **MCP Server (Stdio)** | `agents/mcp_server.py` — 6 DB tools via FastMCP |
+| **Agent Skills** | Custom Python tools on each sub-agent |
+| **Subagents** | `enable_subagents=True` + async delegation |
+| **Autonomous Behavior** | Weakness Agent proactively fixes schedule gaps |
+
+➡️ **See [`agents/`](./agents/) for the full ADK system** — runs in 5 minutes with just a Gemini API key!
+
+---
+
 ## 📋 Table of Contents
 
+- [🏆 Kaggle Capstone](#-kaggle-capstone----5-day-ai-agents-with-google)
 - [✨ Features](#-features)
 - [🏗️ Architecture Overview](#️-architecture-overview)
 - [🛠️ Tech Stack](#️-tech-stack)

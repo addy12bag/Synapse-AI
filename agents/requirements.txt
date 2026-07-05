@@ -1,0 +1,5 @@
+google-antigravity
+mcp
+psycopg2-binary
+python-dotenv
+asyncio
