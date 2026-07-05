@@ -398,6 +398,22 @@ GEMINI_API_KEY="AIzaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    npx prisma db push
    ```
 
+#### Option C — Local Prisma Postgres (Modern Dev Setup)
+
+1. Start the local Prisma Postgres server:
+   ```bash
+   npx prisma dev start default
+   ```
+2. Copy the `DATABASE_URL` printed by the CLI command (it starts with `prisma+postgres://`).
+3. Save it to your `.env` file in the root directory:
+   ```env
+   DATABASE_URL="prisma+postgres://localhost:51213/?api_key=..."
+   ```
+4. Push the schema to synchronize your tables:
+   ```bash
+   export $(grep -v '^#' .env | xargs) && npx prisma db push
+   ```
+
 ---
 
 ### 5. Run the Development Server
