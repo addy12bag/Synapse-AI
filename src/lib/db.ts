@@ -6,7 +6,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Extract direct TCP connection string from prisma+postgres:// URL if present
+// Resolve the connection string.
+// On Render/Railway: DATABASE_URL is a standard postgresql:// URL (set in env vars dashboard).
+// On local dev: DATABASE_URL may be a prisma+postgres:// URL — decode it.
 let connectionString = process.env.DATABASE_URL || '';
 
 if (connectionString.startsWith('prisma+postgres://')) {
@@ -27,9 +29,6 @@ if (connectionString.startsWith('prisma+postgres://')) {
 
 const pool = new pg.Pool({ connectionString })
 const adapter = new PrismaPg(pool)
-
-// Override DATABASE_URL so Prisma Client reads standard TCP postgresql:// at runtime
-process.env.DATABASE_URL = connectionString
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 

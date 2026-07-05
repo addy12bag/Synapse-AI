@@ -3,6 +3,9 @@ import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
+
 interface QuizPageProps {
   params: Promise<{ id: string }>;
 }
