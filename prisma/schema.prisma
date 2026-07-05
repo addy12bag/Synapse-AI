@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH ───────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  clerkId       String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  subjects      Subject[]
+  sessions      StudySession[]
+  schedules     Schedule[]
+  syllabi       Syllabus[]
+  quizAttempts  QuizAttempt[]
+  chatMessages  ChatMessage[]
+  leaderboard   LeaderboardEntry?
+  preferences   UserPreferences?
+  spacedCards   SpacedRepetitionCard[]
+}
+
+model UserPreferences {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  user            User    @relation(fields: [userId], references: [id])
+  pomodoroWork    Int     @default(25)   // minutes
+  pomodoroBreak   Int     @default(5)
+  dailyGoalHours  Float   @default(4)
+  timezone        String  @default("Asia/Kolkata")
+  theme           String  @default("light")
+}
+
+// ─── PHASE 1 ────────────────────────────────────────
+model Subject {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  name        String
+  color       String    @default("#6366f1")
+  icon        String?
+  targetHours Float     @default(0)
+  priority    Int       @default(1)      // 1–5
+  examDate    DateTime?
+  topics      Topic[]
+  sessions    StudySession[]
+  schedules   Schedule[]
+  syllabi     Syllabus[]
+  quizzes     Quiz[]
+  createdAt   DateTime  @default(now())
+}
+
+model Topic {
+  id          String    @id @default(cuid())
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id])
+  title       String
+  completed   Boolean   @default(false)
+  notes       String?
+  order       Int       @default(0)
+}
+
+model Schedule {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  date        DateTime
+  startTime   String    // "09:00"
+  endTime     String    // "11:00"
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+  title       String
+  isCompleted Boolean   @default(false)
+  isAIGenerated Boolean @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model StudySession {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+  startTime   DateTime
+  endTime     DateTime?
+  durationMin Int       @default(0)
+  type        String    @default("pomodoro") // pomodoro | freeform
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+// ─── PHASE 2 ────────────────────────────────────────
+model Syllabus {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+  fileName    String
+  fileUrl     String
+  parsedText  String?   @db.Text
+  status      String    @default("pending")  // pending | parsing | done | failed
+  quizzes     Quiz[]
+  chunks      SyllabusChunk[]
+  uploadedAt  DateTime  @default(now())
+}
+
+model SyllabusChunk {
+  id          String    @id @default(cuid())
+  syllabusId  String
+  syllabus    Syllabus  @relation(fields: [syllabusId], references: [id])
+  content     String    @db.Text
+  embedding   Float[]   // pgvector
+  chunkIndex  Int
+}
+
+model Quiz {
+  id          String    @id @default(cuid())
+  title       String
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+  syllabusId  String?
+  syllabus    Syllabus? @relation(fields: [syllabusId], references: [id])
+  questions   Question[]
+  attempts    QuizAttempt[]
+  isAIGenerated Boolean @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+model Question {
+  id          String    @id @default(cuid())
+  quizId      String
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  text        String    @db.Text
+  type        String    @default("mcq")  // mcq | flashcard | short
+  options     String[]
+  answer      String
+  explanation String?   @db.Text
+  order       Int       @default(0)
+  spacedCards SpacedRepetitionCard[]
+}
+
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  quizId      String
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  score       Float
+  totalQ      Int
+  answers     Json      // { questionId: selectedAnswer }
+  timeTaken   Int       // seconds
+  completedAt DateTime  @default(now())
+}
+
+model ChatMessage {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  role        String    // user | assistant
+  content     String    @db.Text
+  subjectId   String?
+  createdAt   DateTime  @default(now())
+}
+
+// ─── PHASE 3 ────────────────────────────────────────
+model LeaderboardEntry {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  totalXP     Int       @default(0)
+  streak      Int       @default(0)
+  level       Int       @default(1)
+  badges      String[]
+  weeklyXP    Int       @default(0)
+  updatedAt   DateTime  @updatedAt
+}
+
+model SpacedRepetitionCard {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  questionId   String
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // SM-2 fields
+  interval     Int       @default(0)   // in days
+  repetitions  Int       @default(0)   
+  easiness     Float     @default(2.5) 
+  nextReview   DateTime  @default(now())
+  lastReviewed DateTime?
+  
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, questionId])
+}
